@@ -139,7 +139,7 @@ class AutomacaoPyAutoGui:
                 print(f"Hora atual: {hora_atual.strftime('%H:%M:%S')} - Fora do intervalo. Aguardando...")
                 time.sleep(60)  # Espera 1 minuto para checar novamente
 
-# Exemplo de uso:
+# Exemplo
 automacao = AutomacaoPyAutoGui()
 
 # Define o horário de início e fim
