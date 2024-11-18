@@ -1,6 +1,9 @@
 import pyautogui
+import pytesseract
 import os
-
+import time
+from PIL import Image
+from datetime import datetime
 
 class AutomacaoPyAutoGui:
     def __init__(self):
@@ -9,21 +12,142 @@ class AutomacaoPyAutoGui:
     def ativar_visualizacao_janelas(self):
         pyautogui.hotkey('win', 'tab')
         pyautogui.sleep(1)
-    
-    def clicar_imagem(self, img_path, confidence=0.6):
-        pyautogui.sleep(1)
-        
-        img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
-        pyautogui.sleep(1)
-        
-        if img is not None:
-            pyautogui.sleep(1)
-            pyautogui.click(img.x, img.y)
+
+    def capturar_tela_inteira(self):
+        """
+        Captura a tela inteira.
+        Retorna uma imagem PIL para ser processada pelo OCR.
+        """
+        screenshot = pyautogui.screenshot()
+        return screenshot
+
+    def verificar_texto_na_imagem(self, screenshot):
+        """
+        Verifica o texto de uma imagem utilizando OCR (Tesseract).
+        Retorna o texto encontrado.
+        """
+        texto = pytesseract.image_to_string(screenshot)
+        return texto
+
+    def encontrar_texto_na_imagem(self, screenshot, texto_busca):
+        """
+        Localiza a posição de um texto específico na tela usando OCR.
+        Retorna a posição do texto encontrado.
+        """
+        resultados = pytesseract.image_to_boxes(screenshot)  # Posições dos caracteres detectados
+        texto_encontrado = []
+
+        for linha in resultados.splitlines():
+            parte = linha.split()
+            if texto_busca.lower() in parte[0].lower():  # Comparando com o texto de busca
+                texto_encontrado.append(parte)
+
+        return texto_encontrado
+
+    def calcular_posicao_checkbox(self, texto_encontrado, offset_x=100, offset_y=0):
+        """
+        A partir da posição do texto, calcula a posição do checkbox.
+        Ajuste de offset pode ser feito para alinhar o clique com o checkbox.
+        """
+        if texto_encontrado:
+            x = int(texto_encontrado[0][1]) + offset_x
+            y = int(texto_encontrado[0][2]) + offset_y
+            return (x, y)
         else:
-            print(f"Imagem {img_path} não encontrada na tela.")
-            
+            print("Texto não encontrado.")
+            return None
+
+    def clicar_no_checkbox(self, posicao):
+        """
+        Clica no checkbox baseado na posição calculada.
+        """
+        if posicao:
+            pyautogui.click(posicao[0], posicao[1])
+            print(f"Clicado no checkbox na posição {posicao}.")
+        else:
+            print("Não foi possível clicar no checkbox.")
+
+    def verificar_checkbox_por_texto(self, texto, checkbox_nome):
+        """
+        Verifica se o primeiro checkbox está marcado ou não, baseado no texto extraído pelo OCR.
+        Retorna 'marcado' ou 'não marcado'.
+        """
+        texto = texto.lower()
+        if checkbox_nome in texto and ("v" in texto or "marcado" in texto or "checked" in texto):
+            return 'marcado'
+        else:
+            return 'não marcado'
+
+    def marcar_checkbox_por_texto(self, checkbox_nome, texto, screenshot):
+        """
+        Verifica o estado do checkbox baseado no texto OCR
+        e tenta marcar o checkbox (clicar no checkbox) se necessário.
+        """
+        if checkbox_nome in texto and "não marcado" in texto:
+            print(f"{checkbox_nome} não está marcado. Marcando agora...")
+            texto_encontrado = self.encontrar_texto_na_imagem(screenshot, checkbox_nome)
+            posicao_checkbox = self.calcular_posicao_checkbox(texto_encontrado)
+            self.clicar_no_checkbox(posicao_checkbox)
+        else:
+            print(f"{checkbox_nome} já está marcado.")
+
+    def acao_repetitiva(self, hora_inicio, hora_fim, intervalo):
+        """
+        Executa uma ação repetidamente a cada intervalo de tempo durante o período especificado.
+        A ação será repetida entre 'hora_inicio' e 'hora_fim'.
+        """
+        while True:
+            # Obtém o horário atual
+            hora_atual = datetime.now()
+
+            # Verifica se o horário atual está dentro do intervalo desejado
+            if hora_atual >= hora_inicio and hora_atual <= hora_fim:
+                print(f"Hora atual: {hora_atual.strftime('%H:%M:%S')} - Executando ação.")
+                
+                # Passo 1: Ativar a visualização de tarefas
+                self.ativar_visualizacao_janelas()
+
+                # Passo 2: Clique na imagem para entrar no programa (exemplo com 'teste.png')
+                # Exemplo de clique em imagem com pyautogui
+                # pyautogui.click('teste.png')  # Substitua pela sua lógica de clique
+                print("Clique na imagem para entrar no programa (passo 2).")
+
+                # Passo 3: Captura a tela inteira
+                screenshot = self.capturar_tela_inteira()
+
+                # Passo 4: Verifica o texto da captura utilizando OCR
+                texto = self.verificar_texto_na_imagem(screenshot)
+
+                # Passo 5: Verifica se o primeiro checkbox está marcado
+                status_primeiro_checkbox = self.verificar_checkbox_por_texto(texto, "primeiro")
+
+                # Passo 6: Se o primeiro checkbox não estiver marcado, marca ele
+                if status_primeiro_checkbox == 'não marcado':
+                    print("Primeiro checkbox não está marcado. Marcando agora...")
+                    self.marcar_checkbox_por_texto("primeiro", texto, screenshot)  # Usando texto para localizar e marcar o checkbox
+                else:
+                    print("Primeiro checkbox já está marcado.")
+
+                # Passo 7: Confirmar a ação (se necessário, clique para confirmar após marcar)
+                # Exemplo de clique para confirmar
+                # pyautogui.click('confirmar.png')  # Substitua com a lógica para confirmar
+                print("Confirmando ação (passo 7).")
+                
+                time.sleep(intervalo)  # Aguarda o próximo intervalo
+            else:
+                # Se não está dentro do intervalo de 12:50 até 13:50, aguarda até o próximo ciclo
+                print(f"Hora atual: {hora_atual.strftime('%H:%M:%S')} - Fora do intervalo. Aguardando...")
+                time.sleep(60)  # Espera 1 minuto para checar novamente
+
+# Exemplo de uso:
 automacao = AutomacaoPyAutoGui()
 
-automacao.ativar_visualizacao_janelas()
+# Define o horário de início e fim
+hora_inicio = datetime.strptime("12:50", "%H:%M")
+hora_fim = datetime.strptime("13:50", "%H:%M")
 
-automacao.clicar_imagem('teste.png', confidence=0.6)
+# Intervalo de 10 minutos (600 segundos)
+intervalo = 600
+
+# Passo 1: Iniciar a execução repetitiva da ação dentro do intervalo de tempo
+automacao.acao_repetitiva(hora_inicio, hora_fim, intervalo)
