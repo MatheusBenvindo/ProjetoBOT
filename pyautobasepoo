@@ -1,0 +1,208 @@
+from instalar_bibliotecas import instalar_bibliotecas
+import pyautogui
+import pytesseract
+import os
+import time
+from PIL import Image
+from datetime import datetime
+import schedule
+
+
+class CapturaTela:
+    """Classe responsável pelas funções de captura de tela e OCR"""
+    
+    def capturar_tela_inteira(self):
+        """ Captura a tela inteira e retorna uma imagem PIL. """
+        screenshot = pyautogui.screenshot()
+        return screenshot
+        # Exemplo:
+        # screenshot = captura_tela.capturar_tela_inteira()
+        # screenshot.show()  # Mostra a captura da tela
+
+    def verificar_texto_na_imagem(self, screenshot):
+        """ Verifica o texto de uma imagem utilizando OCR (Tesseract). """
+        texto = pytesseract.image_to_string(screenshot)
+        return texto
+        # Exemplo:
+        # texto = captura_tela.verificar_texto_na_imagem(screenshot)
+        # print(texto)  # Exibe o texto extraído pela OCR
+
+    def encontrar_texto_na_imagem(self, screenshot, texto_busca):
+        """ Localiza a posição de um texto específico na tela usando OCR. """
+        resultados = pytesseract.image_to_boxes(screenshot)
+        texto_encontrado = []
+
+        for linha in resultados.splitlines():
+            parte = linha.split()
+            if texto_busca.lower() in parte[0].lower():  # Comparando com o texto de busca
+                texto_encontrado.append(parte)
+
+        return texto_encontrado
+        # Exemplo:
+        # texto_encontrado = captura_tela.encontrar_texto_na_imagem(screenshot, "exemplo")
+        # print(texto_encontrado)  # Exibe a posição do texto encontrado
+
+        
+class ControleMouse:
+    """Classe responsável pelas ações de controle do mouse (clicar nas imagens, marcar checkboxes, etc.)"""
+    
+    def clicar_imagem(self, img_path, confidence=0.6):
+        """Clica em uma imagem na tela com uma confiança especificada"""
+        pyautogui.sleep(1)
+        img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
+
+        if img is not None:
+            pyautogui.sleep(1)
+            pyautogui.click(img.x, img.y)
+        else:
+            print(f"Imagem {img_path} não encontrada na tela.")
+        # Exemplo:
+        # controle_mouse.clicar_imagem("teste.png", 0.8)
+
+    def ativar_visualizacao_janelas(self):
+        """Ativa a visualização das janelas (Windows + Tab)"""
+        pyautogui.hotkey('win', 'tab')
+        pyautogui.sleep(1)
+        # Exemplo:
+        # controle_mouse.ativar_visualizacao_janelas()
+
+    def calcular_posicao_checkbox(self, texto_encontrado, offset_x=100, offset_y=0):
+        """Calcula a posição do checkbox a partir do texto encontrado."""
+        if texto_encontrado:
+            x = int(texto_encontrado[0][1]) + offset_x
+            y = int(texto_encontrado[0][2]) + offset_y
+            return (x, y)
+        else:
+            print("Texto não encontrado.")
+            return None
+        # Exemplo:
+        # posicao = controle_mouse.calcular_posicao_checkbox(texto_encontrado)
+        # print(posicao)  # Exibe a posição calculada do checkbox
+
+    def clicar_no_checkbox(self, posicao):
+        """Clica no checkbox baseado na posição calculada."""
+        if posicao:
+            pyautogui.click(posicao[0], posicao[1])
+            print(f"Clicado no checkbox na posição {posicao}.")
+        else:
+            print("Não foi possível clicar no checkbox.")
+        # Exemplo:
+        # controle_mouse.clicar_no_checkbox(posicao)
+
+    def verificar_checkbox_por_texto(self, texto, checkbox_nome):
+        """Verifica se o checkbox está marcado com base no texto OCR."""
+        texto = texto.lower()
+        if checkbox_nome in texto and ("v" in texto or "marcado" in texto or "checked" in texto):
+            return 'marcado'
+        else:
+            return 'não marcado'
+        # Exemplo:
+        # status = controle_mouse.verificar_checkbox_por_texto(texto, "primeiro")
+        # print(status)  # Exibe se o checkbox está marcado ou não
+
+    def marcar_checkbox_por_texto(self, checkbox_nome, texto, screenshot):
+        """Marca o checkbox baseado no texto extraído por OCR."""
+        if checkbox_nome in texto and "não marcado" in texto:
+            print(f"{checkbox_nome} não está marcado. Marcando agora...")
+            texto_encontrado = self.encontrar_texto_na_imagem(screenshot, checkbox_nome)
+            posicao_checkbox = self.calcular_posicao_checkbox(texto_encontrado)
+            self.clicar_no_checkbox(posicao_checkbox)
+        else:
+            print(f"{checkbox_nome} já está marcado.")
+        # Exemplo:
+        # controle_mouse.marcar_checkbox_por_texto("primeiro", texto, screenshot)
+
+        
+class Agendador:
+    """Classe responsável por agendar e gerenciar as tarefas com o schedule"""
+    
+    def __init__(self, automacao):
+        self.automacao = automacao
+
+    def agendar_acao(self):
+        # Agendar ações diárias ou específicas
+        schedule.every().day.at("18:00").do(self.automacao.realizar_acao_18h)  # Exemplo de ação agendada para às 18h
+        schedule.every().day.at("12:50").do(self.automacao.acao_diaria)  # Exemplo para realizar ações às 12:50
+
+    def iniciar_agendamento(self):
+        while True:
+            schedule.run_pending()  # Executa as tarefas pendentes
+            time.sleep(1)  # Espera 1 segundo antes de verificar novamente
+        # Exemplo:
+        # agendador.iniciar_agendamento()  # Inicia o agendamento das tarefas
+
+        
+class Automacao:
+    """Classe principal que orquestra a automação"""
+
+    def __init__(self):
+        self.controle_mouse = ControleMouse()
+        self.captura_tela = CapturaTela()
+        self.agendador = Agendador(self)
+
+    def realizar_acao_18h(self):
+        """Ação a ser realizada às 18h"""
+        print("Executando ações programadas para as 18h")
+        # Exemplo de ação para as 18h
+        self.controle_mouse.ativar_visualizacao_janelas()
+        screenshot = self.captura_tela.capturar_tela_inteira()
+        texto = self.captura_tela.verificar_texto_na_imagem(screenshot)
+        print(f"Texto na imagem: {texto}")
+
+        # Adicionar a verificação e marcação do checkbox como parte da ação
+        self.controle_mouse.marcar_checkbox_por_texto("primeiro", texto, screenshot)
+
+    def acao_diaria(self):
+        """Ação a ser realizada periodicamente (exemplo às 12:50)"""
+        print("Executando ações programadas para as 12:50")
+        # Lógica de execução de rotina diária
+        self.controle_mouse.ativar_visualizacao_janelas()
+
+    def acao_repetitiva(self):
+        """Ação repetitiva que ocorre periodicamente"""
+        print("Executando ação repetitiva a cada 10 minutos.")
+        screenshot = self.captura_tela.capturar_tela_inteira()
+        texto = self.captura_tela.verificar_texto_na_imagem(screenshot)
+        print(f"Texto capturado: {texto}")
+
+        # Verificação e marcação do checkbox
+        self.controle_mouse.marcar_checkbox_por_texto("primeiro", texto, screenshot)
+
+    def acao_repetitiva_com_laco(self, hora_inicio, hora_fim, intervalo):
+        """Executa uma ação repetidamente a cada intervalo de tempo durante o período especificado."""
+        while True:
+            hora_atual = datetime.now()
+
+            # Verifica se o horário atual está dentro do intervalo desejado
+            if hora_atual >= hora_inicio and hora_atual <= hora_fim:
+                print(f"Hora atual: {hora_atual.strftime('%H:%M:%S')} - Executando ação repetitiva.")
+                
+                screenshot = self.captura_tela.capturar_tela_inteira()
+                texto = self.captura_tela.verificar_texto_na_imagem(screenshot)
+                print(f"Texto capturado: {texto}")
+
+                # Verificação e marcação do checkbox
+                self.controle_mouse.marcar_checkbox_por_texto("primeiro", texto, screenshot)
+
+                time.sleep(intervalo)  # Aguarda o próximo intervalo
+            else:
+                print(f"Hora atual: {hora_atual.strftime('%H:%M:%S')} - Fora do intervalo. Aguardando...")
+                time.sleep(60)  # Espera 1 minuto para checar novamente
+
+    def iniciar_automacao(self):
+        """Inicia a automação e começa o agendamento das tarefas"""
+        self.agendador.agendar_acao()
+        self.agendador.iniciar_agendamento()
+
+
+# Exemplo de uso
+if __name__ == "__main__":
+    automacao = Automacao()
+    
+    # Defina o horário de início e fim da ação repetitiva (exemplo: 12:00 até 14:00)
+    hora_inicio = datetime.strptime("12:00", "%H:%M")
+    hora_fim = datetime.strptime("14:00", "%H:%M")
+    intervalo = 600  # Intervalo de 10 minutos
+    # automacao.acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo)
+
+    automacao.iniciar_automacao()  # Inicia a automação e o agendamento das tarefas
