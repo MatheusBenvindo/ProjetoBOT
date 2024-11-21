@@ -1,12 +1,17 @@
+# main.py
+
 from instalar_bibliotecas import instalar_bibliotecas
+from datetime import datetime
 import pyautogui
 import pytesseract
 import os
 import time
 from PIL import Image
-from datetime import datetime
 import schedule
 
+
+# Verifica e instala as bibliotecas necessárias
+instalar_bibliotecas()
 
 class CapturaTela:
     """Classe responsável pelas funções de captura de tela e OCR"""
