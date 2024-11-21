@@ -211,3 +211,11 @@ if __name__ == "__main__":
     # automacao.acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo)
 
     automacao.iniciar_automacao()  # Inicia a automação e o agendamento das tarefas
+    
+
+Agendador.agendar_acao
+schedule.every().day.at("12:50").do(self.automacao.acao.diaria)
+ControleMouse.ativar_visualizacao_janelas 
+ControleMouse.clicar_imagem ("teste.png", 0.8)
+ControleMouse.clicar_imagem ("teste1.png", 0.8)
+ControleMouse.clicar_imagem ("teste3.png", 0.8)
