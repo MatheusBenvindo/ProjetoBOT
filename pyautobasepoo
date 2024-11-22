@@ -97,7 +97,7 @@ class ControleMouse:
     def verificar_checkbox_por_texto(self, texto, checkbox_nome):
         """Verifica se o checkbox está marcado com base no texto OCR."""
         texto = texto.lower()
-        if checkbox_nome in texto and ("v" in texto or "marcado" in texto or "checked" in texto):
+        if checkbox_nome in texto and ("x" in texto or "marcado" in texto or "checked" in texto):
             return 'marcado'
         else:
             return 'não marcado'
@@ -163,7 +163,7 @@ class Automacao:
         # Lógica de execução de rotina diária
         self.controle_mouse.ativar_visualizacao_janelas()
 
-    def acao_repetitiva(self):
+    def acao_repetitiva_verific_texto(self):
         """Ação repetitiva que ocorre periodicamente"""
         print("Executando ação repetitiva a cada 10 minutos.")
         screenshot = self.captura_tela.capturar_tela_inteira()
@@ -172,6 +172,22 @@ class Automacao:
 
         # Verificação e marcação do checkbox
         self.controle_mouse.marcar_checkbox_por_texto("primeiro", texto, screenshot)
+    
+    def acao_repetitiva_timer(self, hora_inicio1, hora_fim1, intervalo1, acao):
+        """Ação repetitiva que ocorre periodicamente"""
+        print("Executando ação repetitiva a cada 10 minutos.")
+        while True:
+            hora_agora = datetime.now()
+            if hora_agora >= hora_inicio1 and hora_agora <= hora_fim1:
+                print (f"Hora Atual: {hora_agora.strftime('%H:%M:%S')} - Executando ação rep.")
+                
+                acao()
+                
+                time.sleep(intervalo1)
+            else:
+                print (f"Fora do intervalo")
+                
+ 
 
     def acao_repetitiva_com_laco(self, hora_inicio, hora_fim, intervalo):
         """Executa uma ação repetidamente a cada intervalo de tempo durante o período especificado."""
@@ -198,6 +214,14 @@ class Automacao:
         """Inicia a automação e começa o agendamento das tarefas"""
         self.agendador.agendar_acao()
         self.agendador.iniciar_agendamento()
+        
+    def rotina_guardiao(self):
+        schedule.every().day.at("12:50").do(self.automacao.acao.diaria)
+        ControleMouse.ativar_visualizacao_janelas 
+        ControleMouse.clicar_imagem ("teste.png", 0.8)
+        ControleMouse.clicar_imagem ("teste1.png", 0.8)
+        ControleMouse.clicar_imagem ("teste2.png", 0.8)
+        ControleMouse.clicar_imagem ("teste3.png", 0.8) 
 
 
 # Exemplo de uso
@@ -213,9 +237,29 @@ if __name__ == "__main__":
     automacao.iniciar_automacao()  # Inicia a automação e o agendamento das tarefas
     
 
-Agendador.agendar_acao
-schedule.every().day.at("12:50").do(self.automacao.acao.diaria)
-ControleMouse.ativar_visualizacao_janelas 
-ControleMouse.clicar_imagem ("teste.png", 0.8)
-ControleMouse.clicar_imagem ("teste1.png", 0.8)
-ControleMouse.clicar_imagem ("teste3.png", 0.8)
+Automacao.rotina_guardiao
+
+pyautogui.sleep(1)
+
+cap_tela = CapturaTela () ## MARCAÇÃO DO CHECKBOX DE PRIMEIRO LUGAR
+screenshot = cap_tela.capturar_tela_inteira
+textoencontrado = cap_tela.encontrar_texto_na_imagem(screenshot= "Birinci")
+textoencontrado = pytesseract.image_to_string (screenshot)
+
+if textoencontrado == "Birinci":
+    ControleMouse.verificar_checkbox_por_texto(textoencontrado, "birinci")
+else:
+    print ("erro, texto não encontrado favor verificar o código ou informações sobre o texto")
+
+hora_inicio1 = datetime.strptime ("12:50", "%H:%M") #Define as variáveis que serão usadas na função acao repetitiva com timer
+hora_fim1 = datetime.strptime ("13:50", "%H:%M")
+intervalo1 = 600 
+
+Automacao.acao_repetitiva_timer (hora_inicio1, hora_fim1, intervalo1, Automacao.rotina_guardiao)
+
+for _ in range (2):
+    pyautogui.hotkey ("alt" + "f4")
+for _ in range (3):
+    pyautogui.hotkey ("tab")
+pyautogui.hotkey ("enter")
+
