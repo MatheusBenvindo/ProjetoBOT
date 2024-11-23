@@ -1,7 +1,12 @@
+import threading
 from datetime import datetime
+import pytz
 import pyautogui
 import schedule
 import time
+
+# Fuso horário de Brasília
+BRASILIA_TZ = pytz.timezone('America/Sao_Paulo')
 
 class CapturaTela:
     """Classe responsável pelas funções de captura de tela e OCR (Reconhecimento Óptico de Caracteres)"""
@@ -73,14 +78,14 @@ class Automacao:
         self.controle_mouse.clicar_imagem("maxicon.png", 0.8)
         self.controle_mouse.clicar_imagem("bauatv.png", 0.8)
         self.controle_mouse.clicar_imagem("korumaplat.png", 0.8)
-        self.controle_mouse.clicar_imagem("entrar.png", 0.8)
+        self.controle_mouse.clicar_imagem("entrar.png", 0.8)    
 
     def acao_repetitiva_com_laco(self, hora_inicio, hora_fim, intervalo):
         """Executa ações repetitivas entre uma hora de início e uma hora de fim, em intervalos especificados"""
-        while datetime.now() < hora_fim:
-            if datetime.now() >= hora_inicio:
+        while datetime.now(BRASILIA_TZ) < hora_fim:
+            if datetime.now(BRASILIA_TZ) >= hora_inicio:
                 self.rotina_guardiao()
-                print(f"Ação executada em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"Ação executada em: {datetime.now(BRASILIA_TZ).strftime('%Y-%m-%d %H:%M:%S')}")
                 time.sleep(intervalo)
             else:
                 print("Fora do horário especificado, finalizando a execução.")
@@ -91,24 +96,26 @@ class Automacao:
         self.agendador.agendar_acao()
         self.agendador.iniciar_agendamento()
 
+# Função para iniciar a rotina repetitiva em uma thread separada
+def iniciar_rotina_repetitiva(automacao):
+    hora_inicio = datetime.strptime("00:51", "%H:%M").replace(tzinfo=BRASILIA_TZ)  # Hora de início da ação ajustada para fuso horário
+    hora_fim = datetime.strptime("00:53", "%H:%M").replace(tzinfo=BRASILIA_TZ)     # Hora de fim da ação ajustada para fuso horário
+    intervalo = 10  # Intervalo de 10 segundos entre as ações
+    automacao.acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo)
+
 if __name__ == "__main__":
     automacao = Automacao()
-    
-    automacao.rotina_guardiao()
 
-    pyautogui.sleep(1)
+    # Inicia a rotina repetitiva em uma thread separada para não bloquear o restante do código
+    rotina_thread = threading.Thread(target=iniciar_rotina_repetitiva, args=(automacao,))
+    rotina_thread.start()
 
-    # Definir as variáveis para a ação repetitiva com timer
-    hora_inicio1 = datetime.strptime("00:51", "%H:%M")  # Hora de início da ação
-    hora_fim1 = datetime.strptime("00:53", "%H:%M")     # Hora de fim da ação
-    intervalo1 = 10  # Intervalo de 10 segundos entre as ações
+    # Inicia o agendador de tarefas
+    agendador_thread = threading.Thread(target=automacao.iniciar_automacao)
+    agendador_thread.start()
 
-    # Chama a função de ação repetitiva com timer
-    automacao.acao_repetitiva_com_laco(hora_inicio1, hora_fim1, intervalo1)
+    # Aguarda a thread da rotina repetitiva terminar
+    rotina_thread.join()
 
-    # Comandos adicionais (fechar janelas, etc.)
-    for _ in range(2):
-        pyautogui.hotkey("alt", "f4")  # Fecha as janelas abertas
-    for _ in range(3):
-        pyautogui.hotkey("tab")  # Alterna entre as janelas abertas
-    pyautogui.hotkey("enter")  # Pressiona Enter
+    # Aguarda a thread do agendador terminar (isso garantirá que o script continue rodando)
+    agendador_thread.join()
