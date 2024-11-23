@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import pyautogui
 import pytesseract
 import os
@@ -32,14 +32,16 @@ def encontrar_texto_na_imagem(screenshot, texto_busca):
 
 def clicar_imagem(img_path, confidence=0.6):
     """Clica em uma imagem na tela com uma confiança especificada"""
-    pyautogui.sleep(1)
-    img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
-
-    if img is not None:
+    try:
         pyautogui.sleep(1)
-        pyautogui.click(img.x, img.y)
-    else:
-        print(f"Imagem {img_path} não encontrada na tela.")
+        img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
+        if img is not None:
+            pyautogui.sleep(1)
+            pyautogui.click(img.x, img.y)
+        else:
+            print(f"Imagem {img_path} não encontrada na tela.")
+    except pyautogui.ImageNotFoundException:
+        print(f"Imagem {img_path} não encontrada na tela. Tente ajustar a confiança ou verificar se a imagem está visível.")
 
 def ativar_visualizacao_janelas():
     """Ativa a visualização das janelas (Windows + Tab)"""
@@ -77,12 +79,10 @@ def iniciar_agendamento():
         schedule.run_pending()  # Executa as tarefas pendentes
         time.sleep(1)  # Espera 1 segundo antes de verificar novamente
 
-def acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo):
-    """Executa ações repetitivas entre uma hora de início e uma hora de fim, em intervalos especificados"""
-    while datetime.now() < hora_fim:
-        if datetime.now() >= hora_inicio:
-            rotina_guardiao()
-            time.sleep(intervalo)
+def acao_repetitiva_com_laco(intervalo):
+    """Executa a rotina guardião repetidamente em intervalos especificados"""
+    rotina_guardiao()
+    time.sleep(intervalo)
 
 def verificar_checkbox_por_texto(screenshot, texto_busca):
     """Função para verificar a presença de uma checkbox com base em um texto específico"""
@@ -105,23 +105,14 @@ def verificar_checkbox_por_texto(screenshot, texto_busca):
         return False
 
 if __name__ == "__main__":
-    # Exemplo de agendamento de uma tarefa repetitiva:
-    hora_inicio = datetime.strptime("12:50", "%H:%M")  # Hora de início da ação repetitiva
-    hora_fim = datetime.strptime("13:50", "%H:%M")     # Hora de fim da ação repetitiva
-    intervalo = 600  # Intervalo de 10 minutos entre as ações
-    acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo)
-
-    rotina_guardiao()
-
-    pyautogui.sleep(1)
-
     # Definir as variáveis para a ação repetitiva com timer
-    hora_inicio1 = datetime.strptime("12:50", "%H:%M")  # Hora de início da ação
-    hora_fim1 = datetime.strptime("13:50", "%H:%M")     # Hora de fim da ação
-    intervalo1 = 600  # Intervalo de 10 minutos entre as ações
+    hora_inicio = datetime.strptime("00:46", "%H:%M")  # Hora de início da ação
+    hora_fim = datetime.strptime("00:47", "%H:%M")     # Hora de fim da ação
+    intervalo = pyautogui.sleep(10)  # Intervalo de 10 segundos entre as ações
 
-    # Chama a função de ação repetitiva com timer
-    acao_repetitiva_com_laco(hora_inicio1, hora_fim1, intervalo1)
+    while datetime.now() < hora_fim:
+        if datetime.now() >= hora_inicio:
+            acao_repetitiva_com_laco(intervalo)
 
     # Comandos adicionais (fechar janelas, etc.)
     for _ in range(2):
