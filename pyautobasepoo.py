@@ -1,12 +1,9 @@
-import threading
-from datetime import datetime
-import pytz
+from datetime import datetime, timedelta
 import pyautogui
-import schedule
+import pytesseract
 import time
-
-# Fuso horário de Brasília
-BRASILIA_TZ = pytz.timezone('America/Sao_Paulo')
+from PIL import Image
+import schedule
 
 class CapturaTela:
     """Classe responsável pelas funções de captura de tela e OCR (Reconhecimento Óptico de Caracteres)"""
@@ -16,6 +13,17 @@ class CapturaTela:
         screenshot = pyautogui.screenshot()  # Captura a tela inteira
         return screenshot
 
+    def verificar_texto_na_imagem(self, screenshot):
+        """Verifica o texto de uma imagem utilizando OCR (Tesseract)."""
+        texto = pytesseract.image_to_string(screenshot)  # Realiza OCR na imagem
+        return texto
+
+    def encontrar_texto_na_imagem(self, screenshot, texto_busca):
+        """Localiza a presença de um texto específico na tela usando OCR."""
+        texto_extraido = pytesseract.image_to_string(screenshot)  # OCR na imagem
+        print("Texto extraído da imagem:", texto_extraido)
+        return texto_busca.lower() in texto_extraido.lower()
+
 class ControleMouse:
     """Classe responsável pelas ações de controle do mouse (clicar nas imagens, marcar checkboxes, etc.)"""
 
@@ -23,7 +31,6 @@ class ControleMouse:
         """Clica em uma imagem na tela com uma confiança especificada"""
         pyautogui.sleep(1)
         img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
-
         if img is not None:
             pyautogui.sleep(1)
             pyautogui.click(img.x, img.y)
@@ -42,14 +49,13 @@ class Agendador:
         self.automacao = automacao
 
     def agendar_acao(self):
-        # Agendar ações diárias ou específicas
-        schedule.every().day.at("18:00").do(self.automacao.realizar_acao_18h)  # Exemplo de ação agendada para às 18h
-        schedule.every().day.at("12:50").do(self.automacao.acao_diaria)  # Exemplo para realizar ações às 12:50
+        schedule.every().day.at("18:00").do(self.automacao.realizar_acao_18h)
+        schedule.every().day.at("12:50").do(self.automacao.acao_diaria)
 
     def iniciar_agendamento(self):
         while True:
-            schedule.run_pending()  # Executa as tarefas pendentes
-            time.sleep(1)  # Espera 1 segundo antes de verificar novamente
+            schedule.run_pending()
+            time.sleep(1)
 
 class Automacao:
     """Classe principal que orquestra a automação"""
@@ -78,44 +84,52 @@ class Automacao:
         self.controle_mouse.clicar_imagem("maxicon.png", 0.8)
         self.controle_mouse.clicar_imagem("bauatv.png", 0.8)
         self.controle_mouse.clicar_imagem("korumaplat.png", 0.8)
-        self.controle_mouse.clicar_imagem("entrar.png", 0.8)    
+        self.controle_mouse.clicar_imagem("entrar.png", 0.8)
 
     def acao_repetitiva_com_laco(self, hora_inicio, hora_fim, intervalo):
         """Executa ações repetitivas entre uma hora de início e uma hora de fim, em intervalos especificados"""
-        while datetime.now(BRASILIA_TZ) < hora_fim:
-            if datetime.now(BRASILIA_TZ) >= hora_inicio:
+        print("Iniciando loop...")
+        while datetime.now() < hora_fim:
+            if datetime.now() >= hora_inicio:
                 self.rotina_guardiao()
-                print(f"Ação executada em: {datetime.now(BRASILIA_TZ).strftime('%Y-%m-%d %H:%M:%S')}")
                 time.sleep(intervalo)
-            else:
-                print("Fora do horário especificado, finalizando a execução.")
-                break
+                # Atualiza a hora atual e imprime para verificação
+                hora_atual = datetime.now()
+                print("Hora Atual no Loop:", hora_atual)
+        print(f"Loop encerrado em {hora_atual}")
 
     def iniciar_automacao(self):
         """Inicia a automação e começa o agendamento das tarefas"""
         self.agendador.agendar_acao()
         self.agendador.iniciar_agendamento()
 
-# Função para iniciar a rotina repetitiva em uma thread separada
-def iniciar_rotina_repetitiva(automacao):
-    hora_inicio = datetime.strptime("00:51", "%H:%M").replace(tzinfo=BRASILIA_TZ)  # Hora de início da ação ajustada para fuso horário
-    hora_fim = datetime.strptime("00:53", "%H:%M").replace(tzinfo=BRASILIA_TZ)     # Hora de fim da ação ajustada para fuso horário
-    intervalo = 10  # Intervalo de 10 segundos entre as ações
-    automacao.acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo)
-
 if __name__ == "__main__":
     automacao = Automacao()
+    automacao.rotina_guardiao()
 
-    # Inicia a rotina repetitiva em uma thread separada para não bloquear o restante do código
-    rotina_thread = threading.Thread(target=iniciar_rotina_repetitiva, args=(automacao,))
-    rotina_thread.start()
+    # Obter a data atual
+    data_hoje = datetime.now().date()
 
-    # Inicia o agendador de tarefas
-    agendador_thread = threading.Thread(target=automacao.iniciar_automacao)
-    agendador_thread.start()
+    # Definir a hora de início com a data atual
+    hora_inicio = datetime.combine(data_hoje, datetime.strptime("12:50", "%H:%M").time())
+    # Tempo total para execução em segundos (600 segundos = 10 minutos)
+    tempo_total_execucao = 3300 
+    # Intervalo entre execuções em segundos
+    intervalo_execucao = 540  
 
-    # Aguarda a thread da rotina repetitiva terminar
-    rotina_thread.join()
+    # Calcula a hora final com base no tempo total de execução
+    hora_fim = hora_inicio + timedelta(seconds=tempo_total_execucao)
 
-    # Aguarda a thread do agendador terminar (isso garantirá que o script continue rodando)
-    agendador_thread.join()
+    # Aguarda até a hora de início
+    while datetime.now() < hora_inicio:
+        time.sleep(1)
+    
+    # Chama a função de ação repetitiva com intervalo
+    automacao.acao_repetitiva_com_laco(datetime.now(), hora_fim, intervalo_execucao)
+
+    # Comandos adicionais (fechar janelas, etc.)
+    for _ in range(2):
+        pyautogui.hotkey("alt", "f4")
+    for _ in range(3):
+        pyautogui.hotkey("tab")
+    pyautogui.hotkey("enter")
