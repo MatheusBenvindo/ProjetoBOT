@@ -84,6 +84,26 @@ def acao_repetitiva_com_laco(hora_inicio, hora_fim, intervalo):
             rotina_guardiao()
             time.sleep(intervalo)
 
+def verificar_checkbox_por_texto(screenshot, texto_busca):
+    """Função para verificar a presença de uma checkbox com base em um texto específico"""
+    # Aqui você pode adicionar a lógica para verificar a checkbox com base no texto extraído da imagem
+    # Isso pode incluir localizar a checkbox e verificar seu estado
+    texto_extraido = pytesseract.image_to_string(screenshot)
+    print("Texto extraído da imagem para checkbox:", texto_extraido)
+
+    if texto_busca.lower() in texto_extraido.lower():
+        # Lógica para verificar o estado da checkbox
+        checkbox_loc = pyautogui.locateCenterOnScreen("checkbox.png", confidence=0.8)
+        if checkbox_loc is not None:
+            print("Checkbox encontrada.")
+            return True
+        else:
+            print("Checkbox não encontrada.")
+            return False
+    else:
+        print("Texto para checkbox não encontrado.")
+        return False
+
 if __name__ == "__main__":
     # Exemplo de agendamento de uma tarefa repetitiva:
     hora_inicio = datetime.strptime("12:50", "%H:%M")  # Hora de início da ação repetitiva
@@ -94,24 +114,6 @@ if __name__ == "__main__":
     rotina_guardiao()
 
     pyautogui.sleep(1)
-    
-    # Captura a tela inteira
-    screenshot = capturar_tela_inteira()
-
-    # Definindo o texto que você deseja buscar
-    texto_busca = "Birinci"
-
-    # Chamando a função encontrar_texto_na_imagem corretamente
-    texto_encontrado = encontrar_texto_na_imagem(screenshot, texto_busca)
-
-    # Verifica se o texto "Birinci" foi encontrado
-    if texto_encontrado:
-        print("Texto 'Birinci' encontrado.")
-        # Aqui você pode adicionar mais ações, como marcar o checkbox ou interagir com a interface
-        # status_checkbox = verificar_checkbox_por_texto(texto_encontrado, "birinci")
-        # print("Status do checkbox:", status_checkbox)
-    else:
-        print("Erro: Texto 'Birinci' não encontrado.")
 
     # Definir as variáveis para a ação repetitiva com timer
     hora_inicio1 = datetime.strptime("12:50", "%H:%M")  # Hora de início da ação
