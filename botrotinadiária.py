@@ -37,6 +37,18 @@ class ControleMouse:
         else:
             print(f"Imagem {img_path} não encontrada na tela.")
 
+    def clicar_varias_vezes(self, img_path, num_cliques, delay=0.1, confidence=0.6):
+        """Clica em uma posição específica várias vezes rapidamente, utilizando a confiança especificada"""
+        img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
+        if img is not None:
+            for _ in range(num_cliques):
+                pyautogui.click(img)
+                time.sleep(delay)  # Pequeno atraso entre os cliques para garantir que todos sejam registrados
+            print(f"Imagem {img_path} clicada {num_cliques} vezes com confiança {confidence}.")
+        else:
+            print(f"Imagem {img_path} não encontrada para clicar várias vezes com confiança {confidence}.")
+
+
     def ativar_visualizacao_janelas(self):
         """Ativa a visualização das janelas (Windows + Tab)"""
         pyautogui.hotkey('win', 'tab')
@@ -107,10 +119,15 @@ if __name__ == "__main__":
     automacao = Automacao()
     mouse = ControleMouse()
 
-    mouse.clicar_imagem('mapa.png')
-    pyautogui.scroll(10)
-    mouse.clicar_imagem('pet1.png')
-    mouse.clicar_imagem('pet1.1.png')
-    pyautogui.sleep (3)
-    mouse.clicar_imagem('pet1.2.png')
-    mouse.clicar_imagem('pet1.3.png')
+    mouse.clicar_imagem('mapa.png', 0.8)
+    pyautogui.sleep(1)
+    mouse.clicar_varias_vezes('mapa1.1.png', 29, delay=0.1, confidence=0.6)
+    mouse.clicar_imagem('pet1.png',0.8)
+    pyautogui.sleep(9)
+    mouse.clicar_imagem('pet1.1.png', 0.8)
+    pyautogui.sleep(5)
+    mouse.clicar_imagem('pet1.2.png', 0.6)
+    pyautogui.sleep(5)
+    mouse.clicar_imagem('pet1.3.png', 0.6)
+    pyautogui.sleep(5)
+    mouse.clicar_varias_vezes('pet1.3.png', 25, delay=2, confidence=0.8)
