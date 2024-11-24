@@ -105,34 +105,12 @@ class Automacao:
 
 if __name__ == "__main__":
     automacao = Automacao()
-    automacao.rotina_guardiao()
+    mouse = ControleMouse()
 
-    # Obter a data atual
-    data_hoje = datetime.now().date()
-
-    # Definir a hora de início com a data atual
-    hora_inicio = datetime.combine(data_hoje, datetime.strptime("12:50", "%H:%M").time())
-    # Tempo total para execução em segundos (600 segundos = 10 minutos)
-    tempo_total_execucao = 3300 
-    # Intervalo entre execuções em segundos
-    intervalo_execucao = 540  
-
-    # Calcula a hora final com base no tempo total de execução
-    hora_fim = hora_inicio + timedelta(seconds=tempo_total_execucao)
-
-    # Aguarda até a hora de início
-    while datetime.now() < hora_inicio:
-        time.sleep(1)
-    
-    # Chama a função de ação repetitiva com intervalo
-    automacao.acao_repetitiva_com_laco(datetime.now(), hora_fim, intervalo_execucao)
-
-    # Desligar o pc
-    for _ in range(1):
-        pyautogui.hotkey("control","alt", "del")
-    for _ in range(7):
-        pyautogui.hotkey("tab")
-    
-pyautogui.hotkey("enter")
-pyautogui.hotkey("down")
-pyautogui.hotkey("enter")
+    mouse.clicar_imagem('mapa.png')
+    pyautogui.scroll(10)
+    mouse.clicar_imagem('pet1.png')
+    mouse.clicar_imagem('pet1.1.png')
+    pyautogui.sleep (3)
+    mouse.clicar_imagem('pet1.2.png')
+    mouse.clicar_imagem('pet1.3.png')
