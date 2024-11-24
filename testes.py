@@ -1,32 +1,51 @@
 from datetime import datetime, timedelta
 import pyautogui
+import pytesseract
+import time
+from PIL import Image
+import schedule
+
+from botrotinadiária import CapturaTela, ControleMouse, Agendador, Automacao
+
+import pyautogui
 import time
 
-# Obter a data atual
-data_hoje = datetime.now().date()
+if __name__ == "__main__":
+    automacao = Automacao()
+    mouse = ControleMouse()
 
-# Teste da função datetime.strptime com data atual
-hora_inicio = datetime.combine(data_hoje, datetime.strptime("10:35", "%H:%M").time())
-print("Hora de Início:", hora_inicio)
+    imagens = ['gloria0.1.png', 'gloria0.2.png', 'gloria0.3.png', 'gloria0.4.png', 'gloria0.5.png', 'gloria0.6.png', 'gloria0.7.png', 'gloria0.8.png', 'gloria0.9.png', 'gloria1.1.png', 'gloria1.1.1.png', 'gloria1.1.2.png', 'gloria1.1.3.png', 'gloria1.1.4png', 'gloria1.1.5.png']
+    
+    for imagem in imagens:
+        img = mouse.clicar_imagem(imagem, 0.8)
+        if img is not None:
+            print(f"Imagem {imagem} encontrada e clicada.")
+            break
+        else:
+            print(f"Imagem {imagem} não encontrada, tentando a próxima.")
 
-# Teste da função timedelta para adicionar segundos
-tempo_total_execucao = 600  # 600 segundos = 10 minutos
-hora_fim = hora_inicio + timedelta(seconds=tempo_total_execucao)
-print("Hora de Fim:", hora_fim)
+    if img is None:
+        print("Nenhuma das imagens foi encontrada. Saindo do loop.")
+    else:
+        pyautogui.sleep(1)
+        mouse.localizar_imagem_na_area('gloria1.4.png', 'gloria1.2.png')
+        pyautogui.sleep(3.5)
 
-# Teste da função datetime.now
-hora_atual = datetime.now()
-print("Hora Atual:", hora_atual)
+        for _ in range(4):
+            pyautogui.hotkey('2')
+            pyautogui.sleep(2)  
 
-# Teste da função time.sleep
-print("Iniciando pausa de 20 segundos...")
-time.sleep(20)
-print("Fim da pausa de 20 segundos")
+        for _ in range(4):
+            pyautogui.hotkey('space')
+            pyautogui.sleep(2)
 
-# Teste de loop com hora atual e hora de fim
-print("Iniciando loop...")
-while datetime.now() < hora_fim:
-    hora_atual = datetime.now()
-    print("Hora Atual no Loop:", hora_atual)
-    time.sleep(10)  # Pausa de 10 segundos
-print(f"Loop encerrado em {hora_atual}")
+        for _ in range(7):
+            pyautogui.hotkey('2')
+            pyautogui.sleep(2)
+
+        for _ in range(7):
+            pyautogui.hotkey('1')
+            pyautogui.sleep(2)
+
+        for _ in range(7):
+            pyautogui.hotkey('5')

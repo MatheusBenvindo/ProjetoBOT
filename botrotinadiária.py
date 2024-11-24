@@ -37,7 +37,7 @@ class ControleMouse:
         else:
             print(f"Imagem {img_path} não encontrada na tela.")
 
-    def clicar_varias_vezes(self, img_path, num_cliques, delay=0.1, confidence=0.6):
+    def clicar_varias_vezes(self, img_path, num_cliques, delay=0.1, confidence=0.822):
         """Clica em uma posição específica várias vezes rapidamente, utilizando a confiança especificada"""
         img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
         if img is not None:
@@ -45,8 +45,25 @@ class ControleMouse:
                 pyautogui.click(img)
                 time.sleep(delay)  # Pequeno atraso entre os cliques para garantir que todos sejam registrados
             print(f"Imagem {img_path} clicada {num_cliques} vezes com confiança {confidence}.")
+    
         else:
             print(f"Imagem {img_path} não encontrada para clicar várias vezes com confiança {confidence}.")
+
+    def localizar_imagem_na_area(self, larger_img_path, smaller_img_path, confidence=0.6):
+        """Localiza uma imagem menor dentro de uma imagem maior e clica nela"""
+        larger_img = pyautogui.locateOnScreen(larger_img_path, confidence=confidence)
+        if larger_img is not None:
+            # Define a região delimitada pela imagem maior
+            region = (larger_img.left, larger_img.top, larger_img.width, larger_img.height)
+            # Procura a imagem menor dentro da região delimitada
+            smaller_img = pyautogui.locateCenterOnScreen(smaller_img_path, region=region, confidence=confidence)
+            if smaller_img is not None:
+                pyautogui.click(smaller_img)
+                print(f"Imagem {smaller_img_path} encontrada e clicada dentro de {larger_img_path}.")
+            else:
+                print(f"Imagem {smaller_img_path} não encontrada dentro de {larger_img_path}.")
+        else:
+            print(f"Imagem maior {larger_img_path} não encontrada na tela.")
 
 
     def ativar_visualizacao_janelas(self):
