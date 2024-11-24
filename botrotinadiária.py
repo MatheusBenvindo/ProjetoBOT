@@ -4,6 +4,8 @@ import pytesseract
 import time
 from PIL import Image
 import schedule
+import tkinter as tk 
+from tkinter import ttk
 
 class CapturaTela:
     """Classe responsável pelas funções de captura de tela e OCR (Reconhecimento Óptico de Caracteres)"""

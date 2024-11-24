@@ -4,38 +4,31 @@ import pytesseract
 import time
 from PIL import Image
 import schedule
-import tkinter as tk
-from tkinter import ttk
+
 from botrotinadiária import CapturaTela, ControleMouse, Agendador, Automacao
 
-# Função para criar a janela de seleção
-def criar_janela_selecao():
-    root = tk.Tk()
-    root.title("Seleção de Classe")
+# Função para verificar a presença ou ausência de um "titã" no jogo
+def verificar_classe_tita():
+    imagem_tita_presente = 'tita_presente.png'  # Imagem que indica a presença de um "titã"
+    imagem_tita_ausente = 'tita_ausente.png'    # Imagem que indica a ausência de um "titã"
 
-    # Variável para armazenar a opção selecionada
-    opcao = tk.StringVar(value="não contém titã")
+    # Verifica se a imagem que indica a presença de um "titã" está na tela
+    tita_presente = pyautogui.locateOnScreen(imagem_tita_presente, confidence=0.8)
+    if tita_presente is not None:
+        print("Titã presente no jogo.")
+        return "contém titã"
 
-    # Função para capturar a opção selecionada e fechar a janela
-    def confirmar():
-        root.destroy()
+    # Verifica se a imagem que indica a ausência de um "titã" está na tela
+    tita_ausente = pyautogui.locateOnScreen(imagem_tita_ausente, confidence=0.8)
+    if tita_ausente is not None:
+        print("Titã ausente no jogo.")
+        return "não contém titã"
 
-    # Layout da janela
-    frame = ttk.Frame(root, padding="10")
-    frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    # Se nenhuma das imagens for encontrada, assume que não contém titã por padrão
+    print("Não foi possível determinar a presença do titã. Assumindo 'não contém titã'.")
+    return "não contém titã"
 
-    ttk.Label(frame, text="Selecione a Classe:").grid(row=0, column=0, pady=5, sticky=tk.W)
-    
-    ttk.Radiobutton(frame, text="Contém Titã", variable=opcao, value="contém titã").grid(row=1, column=0, pady=5, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Não Contém Titã", variable=opcao, value="não contém titã").grid(row=2, column=0, pady=5, sticky=tk.W)
-    
-    ttk.Button(frame, text="Confirmar", command=confirmar).grid(row=3, column=0, pady=10)
-
-    root.mainloop()
-    
-    return opcao.get()
-
-# Função para executar a sequência de teclas com base na opção selecionada
+# Função para executar a sequência de teclas com base na opção verificada
 def executar_sequencia_teclas(opcao):
     if opcao == "contém titã":
         for _ in range(4):
@@ -80,8 +73,8 @@ if __name__ == "__main__":
     automacao = Automacao()
     mouse = ControleMouse()
 
-    # Chamar a função para criar a janela de seleção
-    opcao_selecionada = criar_janela_selecao()
+    # Verifica a presença ou ausência de "titã"
+    opcao_selecionada = verificar_classe_tita()
 
     mouse.clicar_imagem('mapa.png', 0.8)
     pyautogui.sleep(1)
@@ -107,5 +100,5 @@ if __name__ == "__main__":
         mouse.localizar_imagem_na_area('gloria1.4.png', 'gloria1.2.png')
         pyautogui.sleep(3.5)
 
-        # Executar a sequência de teclas com base na opção selecionada
+        # Executar a sequência de teclas com base na opção verificada
         executar_sequencia_teclas(opcao_selecionada)
