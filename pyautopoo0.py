@@ -26,3 +26,5 @@ automacao = AutomacaoPyAutoGui()
 automacao.ativar_visualizacao_janelas()
 
 automacao.clicar_imagem('teste.png', confidence=0.6)
+
+"teste de git commit"
