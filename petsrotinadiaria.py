@@ -23,3 +23,5 @@ if __name__ == "__main__":
     mouse.clicar_imagem('pet1.3.png', 0.6)
     pyautogui.sleep(5)
     mouse.clicar_varias_vezes('pet1.3.png', 25, delay=2, confidence=0.8)
+
+    
