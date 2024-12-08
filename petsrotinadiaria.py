@@ -5,7 +5,7 @@ import time
 from PIL import Image
 import schedule
 
-from botrotinadiária import CapturaTela, ControleMouse, Agendador, Automacao
+from petdiário import CapturaTela, ControleMouse, Agendador, Automacao
 
 if __name__ == "__main__":
     automacao = Automacao()

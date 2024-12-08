@@ -6,7 +6,7 @@ from PIL import Image
 import schedule
 import tkinter as tk
 from tkinter import ttk
-from botrotinadiária import CapturaTela, ControleMouse, Agendador, Automacao
+from petdiário import CapturaTela, ControleMouse, Agendador, Automacao
 
 # Função para criar a janela de seleção
 def criar_janela_selecao():
