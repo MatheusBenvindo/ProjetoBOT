@@ -4,6 +4,7 @@ import pytesseract
 import time
 from PIL import Image
 import schedule
+import subprocess
 
 class CapturaTela:
     """Classe responsável pelas funções de captura de tela e OCR (Reconhecimento Óptico de Caracteres)"""
@@ -65,6 +66,38 @@ class Automacao:
         self.captura_tela = CapturaTela()
         self.agendador = Agendador(self)
 
+    def verificar_entrada_em_batalha(self, img_batalha_path):
+        """Função que verifica se entrou em batalha pela imagem"""
+        img_batalha = pyautogui.locateCenterOnScreen(img_batalha_path, confidence=0.8)
+        
+        if img_batalha is not None:
+            print("Entrou em batalha!")
+            self.tratar_batalha()
+        else:
+            print("Nenhuma batalha detectada.")
+
+    def tratar_batalha(self):
+        while (self.verificar_entrada_em_batalha):
+            for _ in range(7):
+                pyautogui.hotkey("4")
+            for _ in range(7):
+                pyautogui.hotkey("3")
+            for _ in range(7):
+                pyautogui.hotkey("2")
+            for _ in range(7):
+                pyautogui.hotkey("5")
+            for _ in range(7):
+                pyautogui.hotkey("1") 
+                print("Executando ações de batalha...")
+                break
+
+    def iniciar_verificacao_batalha(self, img_batalha_path, intervalo):
+        """Inicia a verificação de batalha com intervalo ajustável"""
+        self.intervalo_verificacao_batalha = intervalo
+        while True:
+            self.verificar_entrada_em_batalha(img_batalha_path)
+            time.sleep(self.intervalo_verificacao_batalha)
+
     def realizar_acao_18h(self):
         """Ação a ser realizada às 18h"""
         print("Executando ações programadas para as 18h")
@@ -84,7 +117,7 @@ class Automacao:
         self.controle_mouse.clicar_imagem("maxicon.png", 0.8)
         self.controle_mouse.clicar_imagem("bauatv.png", 0.8)
         self.controle_mouse.clicar_imagem("korumaplat.png", 0.8)
-        self.controle_mouse.clicar_imagem("entrar.png", 0.8)
+        self.iniciar_verificacao_batalha("verificacaobatalha.png", 10)
 
     def acao_repetitiva_com_laco(self, hora_inicio, hora_fim, intervalo):
         """Executa ações repetitivas entre uma hora de início e uma hora de fim, em intervalos especificados"""
@@ -102,37 +135,6 @@ class Automacao:
         """Inicia a automação e começa o agendamento das tarefas"""
         self.agendador.agendar_acao()
         self.agendador.iniciar_agendamento()
-
-if __name__ == "__main__":
-    automacao = Automacao()
-    automacao.rotina_guardiao()
-
-    # Obter a data atual
-    data_hoje = datetime.now().date()
-
-    # Definir a hora de início com a data atual
-    hora_inicio = datetime.combine(data_hoje, datetime.strptime("12:50", "%H:%M").time())
-    # Tempo total para execução em segundos (600 segundos = 10 minutos)
-    tempo_total_execucao = 3300 
-    # Intervalo entre execuções em segundos
-    intervalo_execucao = 540  
-
-    # Calcula a hora final com base no tempo total de execução
-    hora_fim = hora_inicio + timedelta(seconds=tempo_total_execucao)
-
-    # Aguarda até a hora de início
-    while datetime.now() < hora_inicio:
-        time.sleep(1)
-    
-    # Chama a função de ação repetitiva com intervalo
-    automacao.acao_repetitiva_com_laco(datetime.now(), hora_fim, intervalo_execucao)
-
-    # Desligar o pc
-    for _ in range(1):
-        pyautogui.hotkey("control","alt", "del")
-    for _ in range(7):
-        pyautogui.hotkey("tab")
-    
-pyautogui.hotkey("enter")
-pyautogui.hotkey("down")
-pyautogui.hotkey("enter")
+    def desligar_computador():
+    # Executa o comando de desligamento do Windows
+        subprocess.run(["shutdown", "/s", "/t", "1"])
