@@ -30,7 +30,7 @@ if __name__ == "__main__":
     automacao.acao_repetitiva_com_laco(datetime.now(), hora_fim, intervalo_execucao)
 
     # Verifica se entrou em batalha a cada 10 segundos
-    img_batalha_path = "caminho/para/sua/imagem_de_batalha.png"
+    img_batalha_path = "verificacaobatalha.png"
     intervalo_verificacao_batalha = 10  # Intervalo de verificação em segundos
     while True:
         img_batalha = pyautogui.locateCenterOnScreen(img_batalha_path, confidence=0.8)
