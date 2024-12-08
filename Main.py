@@ -8,7 +8,7 @@ import subprocess
 import threading
 
 class CapturaTela:
-    """Captura de tela e OCR"""
+    """Classe responsável pelas funções de captura de tela e OCR (Reconhecimento Óptico de Caracteres)"""
 
     def capturar_tela_inteira(self):
         return pyautogui.screenshot()
@@ -22,7 +22,7 @@ class CapturaTela:
         return texto_busca.lower() in texto_extraido.lower()
 
 class ControleMouse:
-    """Controle do mouse"""
+    """Classe responsável pelas ações de controle do mouse (clicar nas imagens, marcar checkboxes, etc.)"""
 
     def clicar_imagem(self, img_path, confidence=0.6):
         pyautogui.sleep(1)
@@ -32,12 +32,37 @@ class ControleMouse:
         else:
             print(f"Imagem {img_path} não encontrada na tela.")
 
+    def clicar_varias_vezes(self, img_path, num_cliques, delay=0.1, confidence=0.822):
+        """Clica em uma posição específica várias vezes rapidamente"""
+        img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
+        if img is not None:
+            for _ in range(num_cliques):
+                pyautogui.click(img)
+                time.sleep(delay)
+            print(f"Imagem {img_path} clicada {num_cliques} vezes com confiança {confidence}.")
+        else:
+            print(f"Imagem {img_path} não encontrada para clicar várias vezes.")
+
+    def localizar_imagem_na_area(self, larger_img_path, smaller_img_path, confidence=0.6):
+        """Localiza uma imagem menor dentro de uma imagem maior e clica nela"""
+        larger_img = pyautogui.locateOnScreen(larger_img_path, confidence=confidence)
+        if larger_img is not None:
+            region = (larger_img.left, larger_img.top, larger_img.width, larger_img.height)
+            smaller_img = pyautogui.locateCenterOnScreen(smaller_img_path, region=region, confidence=confidence)
+            if smaller_img is not None:
+                pyautogui.click(smaller_img)
+                print(f"Imagem {smaller_img_path} encontrada e clicada dentro de {larger_img_path}.")
+            else:
+                print(f"Imagem {smaller_img_path} não encontrada dentro de {larger_img_path}.")
+        else:
+            print(f"Imagem maior {larger_img_path} não encontrada na tela.")
+
     def ativar_visualizacao_janelas(self):
         pyautogui.hotkey('win', 'tab')
         pyautogui.sleep(1)
 
 class Agendador:
-    """Agendamento de tarefas"""
+    """Classe responsável por agendar e gerenciar as tarefas com o schedule"""
 
     def __init__(self, automacao):
         self.automacao = automacao
@@ -52,7 +77,7 @@ class Agendador:
             time.sleep(1)
 
 class Automacao:
-    """Automação principal"""
+    """Classe principal que orquestra a automação"""
 
     def __init__(self):
         self.controle_mouse = ControleMouse()
@@ -123,6 +148,7 @@ class Automacao:
         self.controle_mouse.clicar_imagem("maxicon.png", 0.8)
         self.controle_mouse.clicar_imagem("bauatv.png", 0.8)
         self.controle_mouse.clicar_imagem("korumaplat.png", 0.8)
+        self.controle_mouse.clicar_imagem("entrar.png", 0.8)
 
     def iniciar_automacao(self):
         self.agendador.agendar_acao()
@@ -131,7 +157,7 @@ class Automacao:
     def desligar_computador(self):
         subprocess.run(["shutdown", "/s", "/t", "1"])
 
-"""# Código principal para iniciar a automação
+# Código principal para iniciar a automação
 if __name__ == "__main__":
     automacao = Automacao()
 
@@ -145,4 +171,4 @@ if __name__ == "__main__":
         time.sleep(1)
 
     automacao.acao_repetitiva_com_laco(datetime.now(), hora_fim, intervalo_execucao)
-    automacao.desligar_computador()"""
+    automacao.desligar_computador()
