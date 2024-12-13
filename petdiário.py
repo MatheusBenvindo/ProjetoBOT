@@ -43,3 +43,11 @@ if __name__ == "__main__":
     if mouse.clicar_varias_vezes('pet1.3.png', 25, delay=5, confidence=0.8):
         print("Imagem 'pet1.3.png' encontrada e clicada várias vezes.")
     
+    if mouse.clicar_imagem('sair.png', 0.8):
+        print("Imagem 'sair.png' encontrada clicada.")
+
+    if mouse.clicar_imagem("mapa.png", 0.7):
+        print('imagem mapa clicada')
+    
+    '''if mouse.clique_imagem_repetida_aleatoria('pet3.2.png', 0.8):
+        print (' imagem repetida escolhida aleatoriamente')'''

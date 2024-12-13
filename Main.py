@@ -7,6 +7,7 @@ import schedule
 import subprocess
 import threading
 import logging
+import random
 
 # Configuração de logging
 logging.basicConfig(
@@ -81,7 +82,14 @@ class ControleMouse:
         pyautogui.hotkey("win", "tab")
         pyautogui.sleep(1)
         logging.info("Visualização das janelas ativada.")
-
+    
+    def clique_imagem_repetida_aleatoria(self, imagem, confidence):
+        localizacoes = list(pyautogui.locateOnScreen(imagem, confidence=confidence))
+        if localizacoes:
+            localizacao_aleatoria = random.choice(localizacoes)
+            x, y = pyautogui.center(localizacao_aleatoria)
+            pyautogui.click(x, y)
+        else: "Imagem repetida não encontrada na tela"
 
 class Agendador:
     def __init__(self, automacao):
