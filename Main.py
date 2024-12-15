@@ -84,12 +84,15 @@ class ControleMouse:
         logging.info("Visualização das janelas ativada.")
     
     def clique_imagem_repetida_aleatoria(self, imagem, confidence):
-        localizacoes = list(pyautogui.locateOnScreen(imagem, confidence=confidence))
+        localizacoes = list(pyautogui.locateAllOnScreen(imagem, confidence=confidence))
         if localizacoes:
             localizacao_aleatoria = random.choice(localizacoes)
             x, y = pyautogui.center(localizacao_aleatoria)
             pyautogui.click(x, y)
-        else: "Imagem repetida não encontrada na tela"
+            return True
+        else:
+            print("Imagem repetida não encontrada na tela")
+            return False
 
 class Agendador:
     def __init__(self, automacao):
