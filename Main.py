@@ -30,13 +30,19 @@ class CapturaTela:
 
 class ControleMouse:
     def clicar_imagem(self, img_path, confidence=0.6):
-        pyautogui.sleep(1)
+        pyautogui.sleep(1)  # Pausa curta antes da ação
         img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
+
         if img is not None:
+            # Clica nas coordenadas da imagem encontrada
             pyautogui.click(img.x, img.y)
-            logging.info(f"Imagem {img_path} encontrada e clicada.")
+            logging.info(
+                f"Imagem {img_path} encontrada e clicada nas coordenadas ({img.x}, {img.y})."
+            )
+            return True  # Retorna True quando o clique é bem-sucedido
         else:
             logging.warning(f"Imagem {img_path} não encontrada na tela.")
+            return False  # Retorna False caso a imagem não seja encontrada
 
     def clicar_varias_vezes(self, img_path, num_cliques, delay=0.1, confidence=0.822):
         img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
@@ -82,8 +88,8 @@ class ControleMouse:
         pyautogui.hotkey("win", "tab")
         pyautogui.sleep(1)
         logging.info("Visualização das janelas ativada.")
-    
-    def clique_imagem_repetida_aleatoria(self, imagem, confidence):
+
+    def clicar_posicao_aleatoria(self, imagem, confidence):
         localizacoes = list(pyautogui.locateAllOnScreen(imagem, confidence=confidence))
         if localizacoes:
             localizacao_aleatoria = random.choice(localizacoes)
@@ -93,6 +99,7 @@ class ControleMouse:
         else:
             print("Imagem repetida não encontrada na tela")
             return False
+
 
 class Agendador:
     def __init__(self, automacao):
@@ -190,19 +197,56 @@ class Automacao:
         subprocess.run(["shutdown", "/s", "/t", "1"])
 
 
-if __name__ == "__main__":
-    automacao = Automacao()
+class AutomacaoBatalha:
+    def __init__(self):
+        self.controle_mouse = ControleMouse()
+        self.stop_event = threading.Event()
 
-    data_hoje = datetime.now().date()
-    hora_inicio = datetime.combine(
-        data_hoje, datetime.strptime("12:50", "%H:%M").time()
-    )
-    tempo_total_execucao = 3300
-    intervalo_execucao = 540
-    hora_fim = hora_inicio + timedelta(seconds=tempo_total_execucao)
+    def verificar_imagem_e_apertar_espaco(self, imagem_path, confidence=0.8):
+        try:
+            if self.controle_mouse.clicar_imagem(imagem_path, confidence):
+                pyautogui.press("space")
+                return True
+        except pyautogui.ImageNotFoundException:
+            # Suprimir mensagens de erro para imagens não encontradas
+            pass
+        return False
 
-    while datetime.now() < hora_inicio:
-        time.sleep(1)
+    def iniciar_sequencia_principal(self):
+        sequencia_imagens = ["dragao1.png", "dragao2.png", "dragao3.png", "dragao4.png"]
+        for imagem in sequencia_imagens:
+            try:
+                self.controle_mouse.clicar_imagem(imagem, 0.8)
+                time.sleep(5)
+            except pyautogui.ImageNotFoundException:
+                # Suprimir mensagens de erro para imagens não encontradas
+                continue
 
-    automacao.acao_repetitiva_com_laco(datetime.now(), hora_fim, intervalo_execucao)
-    automacao.desligar_computador()
+    def iniciar_sequencia_alternativa(self):
+        sequencia_imagens = ["odin2.png", "odinex.png", "odin5.png"]
+        for imagem in sequencia_imagens:
+            try:
+                self.controle_mouse.clicar_imagem(imagem, 0.8)
+                time.sleep(5)
+            except pyautogui.ImageNotFoundException:
+                # Suprimir mensagens de erro para imagens não encontradas
+                continue
+
+    def verificar_batalha_com_imagens(self):
+        end_time = datetime.now() + timedelta(hours=1)
+        while not self.stop_event.is_set():
+            if datetime.now() > end_time:
+                break
+            if self.verificar_imagem_e_apertar_espaco("dragaopet.png", 0.8):
+                self.iniciar_sequencia_alternativa()
+            else:
+                self.iniciar_sequencia_principal()
+            time.sleep(1)
+        print("Verificação de batalha concluída.")
+
+    def iniciar_verificacao_batalha_imagens(self):
+        batalha_thread = threading.Thread(target=self.verificar_batalha_com_imagens)
+        batalha_thread.start()
+
+    def parar_verificacao_batalha_imagens(self):
+        self.stop_event.set()
