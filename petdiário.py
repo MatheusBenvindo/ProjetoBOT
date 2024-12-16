@@ -104,7 +104,7 @@ if __name__ == "__main__":
     for passo in passos:
         if mouse.clicar_imagem(passo, 0.7):
             print(f"Imagem '{passo}' clicada.")
-        time.sleep(10)
+        time.sleep(30)
 
     if mouse.clicar_imagem("fechartela.png"):
         print("Imagem 'fechartela.png' localizada e clicada.")

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pyautogui
 import pytesseract
+import cv2
 import time
 from PIL import Image
 import schedule
@@ -8,6 +9,7 @@ import subprocess
 import threading
 import logging
 import random
+import numpy as np
 
 # Configuração de logging
 logging.basicConfig(
@@ -29,20 +31,37 @@ class CapturaTela:
 
 
 class ControleMouse:
-    def clicar_imagem(self, img_path, confidence=0.6):
-        pyautogui.sleep(1)  # Pausa curta antes da ação
-        img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
+    def duplo_clique(self, imagem, confidence=0.8):
+        try:
+            # Localiza a imagem na tela
+            imagem_localizada = pyautogui.locateOnScreen(imagem, confidence=confidence)
 
-        if img is not None:
-            # Clica nas coordenadas da imagem encontrada
-            pyautogui.click(img.x, img.y)
-            logging.info(
-                f"Imagem {img_path} encontrada e clicada nas coordenadas ({img.x}, {img.y})."
-            )
-            return True  # Retorna True quando o clique é bem-sucedido
+            if imagem_localizada:
+                # Obtém as coordenadas do centro da área localizada
+                x, y = pyautogui.center(imagem_localizada)
+
+                # Realiza duplo clique na posição localizada
+                pyautogui.doubleClick(x, y)
+                logging.info(f"Imagem {imagem} encontrada e clicada.")
+            else:
+                logging.warning(f"Imagem {imagem} não encontrada na tela.")
+        except pyautogui.ImageNotFoundException:
+            logging.error(f"Não foi possível localizar a imagem {imagem}.")
+
+    def clicar_imagem(self, imagem, confidence=0.7):
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        template = cv2.imread(imagem, cv2.IMREAD_COLOR)
+
+        result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+
+        if max_val >= confidence:
+            h, w, _ = template.shape
+            pyautogui.click(max_loc[0] + w / 2, max_loc[1] + h / 2)
+            logging.info(f"Imagem {imagem} encontrada e clicada.")
         else:
-            logging.warning(f"Imagem {img_path} não encontrada na tela.")
-            return False  # Retorna False caso a imagem não seja encontrada
+            logging.info(f"Imagem {imagem} não encontrada com a confiança necessária.")
 
     def clicar_varias_vezes(self, img_path, num_cliques, delay=0.1, confidence=0.822):
         img = pyautogui.locateCenterOnScreen(img_path, confidence=confidence)
