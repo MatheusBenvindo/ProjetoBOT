@@ -35,7 +35,7 @@ if __name__ == "__main__":
     time.sleep(3)
     mouse.clicar_imagem("lab1.1.png")
     time.sleep(3)
-    mouse.clicar_imagem("lab1.2")
+    mouse.clicar_imagem("lab1.2.png")
     time.sleep(3)
     mouse.clicar_imagem("fechartela.png")
     # LAB2
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     time.sleep(3)
     mouse.clicar_imagem("lab1.1.png")
     time.sleep(3)
-    mouse.clicar_imagem("lab1.2")
+    mouse.clicar_imagem("lab1.2.png")
     time.sleep(3)
     mouse.clicar_imagem("fechartela.png")
     # LAB3
@@ -63,14 +63,25 @@ if __name__ == "__main__":
     time.sleep(3)
     mouse.clicar_imagem("lab1.1.png")
     time.sleep(3)
-    mouse.clicar_imagem("lab1.2")
+    mouse.clicar_imagem("lab1.2.png")
     time.sleep(3)
     mouse.clicar_imagem("fechartela.png")
+    time.sleep(3)
+
+if __name__ == "__main__":
+    mouse = ControleMouse()
+
+    mouse.clicar_imagem("guilda.png")
+    time.sleep(3)
+    mouse.clicar_imagem("guilda1.png")
+    time.sleep(3)
+    mouse.clicar_imagem("guilda1.1.png")
+    time.sleep(2)
 
     imgg = [
-        "guilda1.4.png",
-        "guilda1.4.1.png",
-        "guilda1.5.png",
+        "guilda1.4.bmp",
+        "guilda1.4.1.bmp",
+        "guilda1.5.bmp",
         "guilda2.3.png",
         "guilda2.4.png",
         "guilda2.5.png",
@@ -83,6 +94,10 @@ if __name__ == "__main__":
         "guilda2.png",
     ]
 
+    mouse.clicar_imagem("guilda1.2.png")
+    time.sleep(3)
+    mouse.clicar_imagem("guilda1.2.png")
+
     for imagem in imgg:
         mouse.localizar_imagem_na_area(imagem, "guildacompra.png")
         pyautogui.hotkey("0")
@@ -94,6 +109,7 @@ if __name__ == "__main__":
         time.sleep(3)
         mouse.clicar_imagem("guildaconfirmacompra.png")
         time.sleep(6)
+        mover_para_ponto_neutro()
 
     mouse.clicar_imagem("guilda2.6.png")
 

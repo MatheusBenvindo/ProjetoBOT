@@ -2,146 +2,145 @@ import cv2
 import numpy as np
 import pyautogui
 import logging
-import random
-import time
-from Main import ControleMouse, AutomacaoBatalha, Agendador, Automacao
+import pytesseract
+from PIL import Image
+
+# Configuração de logging corrigida
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
-def comparar_histogramas(imagem1, imagem2):
-    img1 = cv2.imread(imagem1)
-    img2 = cv2.imread(imagem2)
+class CapturaTela:
+    def capturar_tela_inteira(self):
+        return pyautogui.screenshot()
 
-    hist1 = cv2.calcHist([img1], [0], None, [256], [0, 256])
-    hist2 = cv2.calcHist([img2], [0], None, [256], [0, 256])
+    def verificar_texto_na_imagem(self, imagem_path):
+        # Carregar a imagem especificada
+        imagem = Image.open(imagem_path)
+        return pytesseract.image_to_string(imagem)
 
-    hist1 = cv2.normalize(hist1, hist1).flatten()
-    hist2 = cv2.normalize(hist2, hist2).flatten()
+    def encontrar_texto_na_imagem(self, imagem_path, texto_busca):
+        # Carregar a imagem especificada
+        imagem = Image.open(imagem_path)
+        texto_extraido = pytesseract.image_to_string(imagem)
+        logging.info(f"Texto extraído da imagem: {texto_extraido}")
+        return texto_busca.lower() in texto_extraido.lower()
 
-    correlation = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-    return correlation
+    def clicar_no_texto(self, imagem_path, texto_busca):
+        # Carregar a imagem especificada
+        imagem = Image.open(imagem_path)
+        screenshot = cv2.cvtColor(np.array(imagem), cv2.COLOR_RGB2BGR)
 
+        # Converter a imagem para escala de cinza
+        gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
 
-def tentar_clicar(imagem, confidence=0.6):
-    try:
-        encontrado = mouse.clicar_imagem(imagem, confidence)
-        time.sleep(3)
-        return encontrado
-    except pyautogui.ImageNotFoundException:
-        logging.error(f"Imagem {imagem} não encontrada.")
-        return False
+        # Usar pytesseract para obter os dados dos boxes de texto
+        d = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
 
-
-def tentar_localizar_imagem_na_area(larger_img, smaller_img, confidence=0.6):
-    larger_img_path = f"{larger_img}"
-    smaller_img_path = f"{smaller_img}"
-
-    try:
-        larger_img_loc = pyautogui.locateOnScreen(
-            larger_img_path, confidence=confidence
-        )
-        if larger_img_loc:
-            region = (
-                larger_img_loc.left,
-                larger_img_loc.top,
-                larger_img_loc.width,
-                larger_img_loc.height,
-            )
-            smaller_img_loc = pyautogui.locateCenterOnScreen(
-                smaller_img_path, region=region, confidence=confidence
-            )
-            if smaller_img_loc:
-                pyautogui.click(smaller_img_loc)
+        # Procurar pelo texto dentro dos dados retornados
+        n_boxes = len(d["level"])
+        for i in range(n_boxes):
+            if texto_busca.lower() in d["text"][i].lower():
+                (x, y, w, h) = (
+                    d["left"][i],
+                    d["top"][i],
+                    d["width"][i],
+                    d["height"][i],
+                )
+                pyautogui.click(x + w / 2, y + h / 2)
                 logging.info(
-                    f"Imagem {smaller_img_path} encontrada e clicada dentro da área de {larger_img_path}."
+                    f"Texto '{texto_busca}' encontrado e clicado na posição ({x}, {y})."
                 )
                 return True
-            else:
-                logging.error(
-                    f"Imagem {smaller_img_path} não encontrada dentro da área de {larger_img_path}."
-                )
-                return False
-        else:
-            logging.error(f"Imagem {larger_img_path} não encontrada na tela.")
-            return False
-    except pyautogui.ImageNotFoundException:
-        logging.error(
-            f"Imagem {smaller_img_path} não encontrada na área de {larger_img_path}."
-        )
+
+        logging.warning(f"Texto '{texto_busca}' não encontrado na imagem.")
         return False
+
+
+# Funções Auxiliares
+def encontrar_e_clicar_imagem(imagem, template, confidence):
+    """Encontra e clica na imagem localizada se a confiança for suficiente."""
+    result = cv2.matchTemplate(imagem, template, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    if max_val >= confidence:
+        h, w, _ = template.shape
+        pyautogui.click(max_loc[0] + w / 2, max_loc[1] + h / 2)
+        logging.info("Imagem encontrada e clicada.")
+        return (
+            int(max_loc[0]),
+            int(max_loc[1]),
+            int(w),
+            int(h),
+        )  # Retorna as coordenadas da imagem encontrada, convertidas para int
+    else:
+        logging.warning("Imagem não encontrada com a confiança necessária.")
+        return None
+
+
+def localizar_imagem_dentro_da_imagem(imagem_base, imagem_procurada, confidence):
+    """Localiza a imagem procurada dentro da imagem base."""
+    screenshot = pyautogui.screenshot(region=imagem_base)
+    screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+    template = cv2.imread(imagem_procurada, cv2.IMREAD_COLOR)
+    return encontrar_e_clicar_imagem(screenshot, template, confidence)
+
+
+# Função Principal
+def localizar_imagens_encadeadas(
+    imagem1, imagem2, capturador, texto_busca, confidence=0.6
+):
+    imagem1_area = pyautogui.locateOnScreen(imagem1, confidence=confidence)
+    if imagem1_area is not None:
+        logging.info(f"Imagem 1 ({imagem1}) encontrada.")
+        region1 = (
+            int(imagem1_area.left),
+            int(imagem1_area.top),
+            int(imagem1_area.width),
+            int(imagem1_area.height),
+        )
+        screenshot1 = pyautogui.screenshot(region=region1)
+        screenshot1 = cv2.cvtColor(np.array(screenshot1), cv2.COLOR_RGB2BGR)
+
+        # Procurar e clicar na Imagem 2 dentro da Imagem 1
+        imagem2_area = encontrar_e_clicar_imagem(
+            screenshot1, cv2.imread(imagem2, cv2.IMREAD_COLOR), confidence
+        )
+        if imagem2_area is not None:
+            logging.info(f"Imagem 2 ({imagem2}) encontrada dentro de {imagem1}.")
+            region2 = (
+                int(imagem2_area[0]),
+                int(imagem2_area[1]),
+                int(imagem2_area[2]),
+                int(imagem2_area[3]),
+            )
+            screenshot2 = pyautogui.screenshot(region=region2)
+            screenshot2 = cv2.cvtColor(np.array(screenshot2), cv2.COLOR_RGB2BGR)
+
+            # Procurar e clicar no texto dentro da Imagem 2 usando CapturaTela
+            if capturador.clicar_no_texto(imagem2, texto_busca):
+                logging.info(
+                    f"Texto '{texto_busca}' encontrado e clicado dentro de {imagem2}."
+                )
+            else:
+                logging.warning(
+                    f"Texto '{texto_busca}' não encontrado dentro de {imagem2}."
+                )
+        else:
+            logging.warning(f"Imagem 2 ({imagem2}) não encontrada dentro de {imagem1}.")
+    else:
+        logging.warning(f"Imagem 1 ({imagem1}) não encontrada na tela.")
 
 
 if __name__ == "__main__":
-    mouse = ControleMouse()
+    imagem1 = "comprageral.bmp"
+    imagem2 = "guilda2.4.bmp"
+    texto_busca = "Satin Al"
 
-    # Gemas
-    mouse.clicar_imagem("gema5.png")
-    time.sleep(3)
-    mouse.clicar_imagem("gema5.1.png")
-    time.sleep(3)
+    # Instanciando a classe CapturaTela
+    capturador = CapturaTela()
 
-    gemp = [
-        "gemaprincipal1.4.png",
-        "gemaprincipal1.3.png",
-        "gemaprincipal1.2.png",
-        "gemaprincipal1.1.png",
-        "gemaprincipal1.png",
-    ]
-    gemn = [
-        "gema1.png",
-        "gema2.png",
-        "gema2,1.png",
-        "gema2.1.1.png",
-        "gema2.1.2.png",
-        "gema2.1.3.png",
-        "gema2.1.4.png",
-        "gema2.1.5.png",
-        "gema2.1.6.png",
-        "gema2.1.7.png",
-        "gema2.1.8.png",
-        "gema2.1.9.png",
-        "gema3.png",
-        "gema3.1.png",
-        "gema3.1.1.png",
-        "gema3.1.2.png",
-        "gema3.1.3.png",
-        "gema3.1.4.png",
-        "gema3.1.5.png",
-        "gema3.1.6.png",
-        "gema3.1.7.png",
-        "gema3.1.8.png",
-        "gema3.1.9.png",
-        "gema4.png",
-        "gema4.1.png",
-        "gema4.1.png",
-        "gema4.1.1.png",
-        "gema4.1.2.png",
-        "gema4.1.3.png",
-        "gema4.1.4.png",
-        "gema4.1.5.png",
-    ]
-
-    selected_image = random.choice(gemn)
-
-    # Clicar na imagem selecionada e procurar as imagens da primeira lista
-    for selected_image in gemn:
-        mouse.duplo_clique(selected_image, 0.9)
-        time.sleep(2)
-
-        for image in gemp:
-            # Verificar similaridade do histograma
-
-            similaridade = comparar_histogramas(selected_image, image)
-            if similaridade > 0.9:  # Ajuste o valor do limiar conforme necessário
-                encontrado = tentar_localizar_imagem_na_area(selected_image, image, 0.6)
-                if encontrado:
-                    try:
-                        mouse.clicar_imagem("gema1.1.png", 0.9)
-                        time.sleep(4)
-                        mouse.clicar_imagem("gema1.2.png", 0.9)
-                    except pyautogui.ImageNotFoundException:
-                        logging.error(f"Imagens subsequentes não encontradas.")
-                else:
-                    logging.error(f"{image} não encontrada na lista gemp.")
-            else:
-                logging.error(f"{image} não tem similaridade suficiente.")
-            time.sleep(3)
+    # Chamando a função localizar_imagens_encadeadas com CapturaTela
+    localizar_imagens_encadeadas(
+        imagem1, imagem2, capturador, texto_busca, confidence=0.8
+    )

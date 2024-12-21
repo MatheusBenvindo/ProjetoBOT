@@ -13,7 +13,7 @@ import numpy as np
 
 # Configuração de logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levellevel)s - %(message)s"
 )
 
 
@@ -28,6 +28,36 @@ class CapturaTela:
         texto_extraido = pytesseract.image_to_string(screenshot)
         logging.info(f"Texto extraído da imagem: {texto_extraido}")
         return texto_busca.lower() in texto_extraido.lower()
+
+    def clicar_no_texto(self, imagem_path, texto_busca):
+        # Carregar a imagem
+        imagem = Image.open(imagem_path)
+        screenshot = cv2.cvtColor(np.array(imagem), cv2.COLOR_RGB2BGR)
+
+        # Converter a imagem para escala de cinza
+        gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
+
+        # Usar pytesseract para obter os dados dos boxes de texto
+        d = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+
+        # Procurar pelo texto dentro dos dados retornados
+        n_boxes = len(d["level"])
+        for i in range(n_boxes):
+            if texto_busca.lower() in d["text"][i].lower():
+                (x, y, w, h) = (
+                    d["left"][i],
+                    d["top"][i],
+                    d["width"][i],
+                    d["height"][i],
+                )
+                pyautogui.click(x + w / 2, y + h / 2)
+                logging.info(
+                    f"Texto '{texto_busca}' encontrado e clicado na posição ({x}, {y})."
+                )
+                return True
+
+        logging.warning(f"Texto '{texto_busca}' não encontrado na imagem.")
+        return False
 
 
 class ControleMouse:
@@ -150,7 +180,7 @@ class Automacao:
             return False
 
     def tratar_batalha(self):
-        while self.verificar_entrada_em_batalha("verificacaobatalha.png"):
+        while self.verificar_entrada_em_batalha("verificacaobatalha.bmp"):
             for _ in range(7):
                 pyautogui.hotkey("4")
             for _ in range(7):
@@ -166,7 +196,7 @@ class Automacao:
 
     def verificar_batalha_periodicamente(self, intervalo_verificacao_batalha):
         while True:
-            if self.verificar_entrada_em_batalha("verificacaobatalha.png"):
+            if self.verificar_entrada_em_batalha("verificacaobatalha.bmp"):
                 self.tratar_batalha()
             time.sleep(intervalo_verificacao_batalha)
 
@@ -203,10 +233,10 @@ class Automacao:
 
     def rotina_guardiao(self):
         self.controle_mouse.ativar_visualizacao_janelas()
-        self.controle_mouse.clicar_imagem("maxicon.png", 0.8)
-        self.controle_mouse.clicar_imagem("bauatv.png", 0.8)
-        self.controle_mouse.clicar_imagem("korumaplat.png", 0.8)
-        self.controle_mouse.clicar_imagem("entrar.png", 0.8)
+        self.controle_mouse.clicar_imagem("maxicon.bmp", 0.8)
+        self.controle_mouse.clicar_imagem("bauatv.bmp", 0.8)
+        self.controle_mouse.clicar_imagem("korumaplat.bmp", 0.8)
+        self.controle_mouse.clicar_imagem("entrar.bmp", 0.8)
 
     def iniciar_automacao(self):
         self.agendador.agendar_acao()
@@ -232,7 +262,7 @@ class AutomacaoBatalha:
         return False
 
     def iniciar_sequencia_principal(self):
-        sequencia_imagens = ["dragao1.png", "dragao2.png", "dragao3.png", "dragao4.png"]
+        sequencia_imagens = ["dragao1.bmp", "dragao2.bmp", "dragao3.bmp", "dragao4.bmp"]
         for imagem in sequencia_imagens:
             try:
                 self.controle_mouse.clicar_imagem(imagem, 0.8)
@@ -242,7 +272,7 @@ class AutomacaoBatalha:
                 continue
 
     def iniciar_sequencia_alternativa(self):
-        sequencia_imagens = ["odin2.png", "odinex.png", "odin5.png"]
+        sequencia_imagens = ["odin2.bmp", "odinex.bmp", "odin5.bmp"]
         for imagem in sequencia_imagens:
             try:
                 self.controle_mouse.clicar_imagem(imagem, 0.8)
@@ -256,7 +286,7 @@ class AutomacaoBatalha:
         while not self.stop_event.is_set():
             if datetime.now() > end_time:
                 break
-            if self.verificar_imagem_e_apertar_espaco("dragaopet.png", 0.8):
+            if self.verificar_imagem_e_apertar_espaco("dragaopet.bmp", 0.8):
                 self.iniciar_sequencia_alternativa()
             else:
                 self.iniciar_sequencia_principal()
